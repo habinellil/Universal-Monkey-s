@@ -4,9 +4,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#4F46E5">
+    <meta name="theme-color" content="#059669">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <title>🐵 Weekend Monkeys - Ultimate Edition</title>
+    <title>🐵 Monkeys Score Board</title>
     <style>
         * {
             margin: 0;
@@ -16,17 +16,21 @@
 
 ```
     :root {
-        --primary: #4F46E5;
-        --secondary: #764ba2;
-        --success: #10B981;
-        --danger: #EF4444;
-        --warning: #F97316;
-        --gold: #F59E0B;
+        --jungle-dark: #064e3b;
+        --jungle-primary: #059669;
+        --jungle-light: #6ee7b7;
+        --jungle-bg: #d1fae5;
+        --earth-brown: #92400e;
+        --leaf-green: #10b981;
+        --vine-green: #34d399;
+        --banana-yellow: #fbbf24;
+        --danger: #dc2626;
     }
 
     body {
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, #059669 0%, #064e3b 50%, #065f46 100%);
+        background-attachment: fixed;
         min-height: 100vh;
         padding: 12px;
         color: #1F2937;
@@ -35,35 +39,54 @@
         text-rendering: optimizeLegibility;
     }
 
+    /* Jungle pattern overlay */
+    body::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-image: 
+            radial-gradient(circle at 20% 80%, rgba(16, 185, 129, 0.1) 0%, transparent 50%),
+            radial-gradient(circle at 80% 20%, rgba(52, 211, 153, 0.1) 0%, transparent 50%),
+            radial-gradient(circle at 40% 40%, rgba(6, 78, 59, 0.1) 0%, transparent 50%);
+        pointer-events: none;
+        z-index: 0;
+    }
+
     .container {
         max-width: 900px;
         margin: 0 auto;
+        position: relative;
+        z-index: 1;
     }
 
-    /* Crystal Clear Cards */
+    /* Crystal Clear Cards with Jungle Theme */
     .card {
-        background: rgba(255, 255, 255, 0.98);
+        background: rgba(255, 255, 255, 0.95);
         backdrop-filter: blur(20px) saturate(180%);
         border-radius: 20px;
         padding: 20px;
         margin-bottom: 20px;
-        box-shadow: 0 8px 32px rgba(31, 38, 135, 0.12);
-        border: 1px solid rgba(255, 255, 255, 0.5);
+        box-shadow: 0 8px 32px rgba(6, 78, 59, 0.15);
+        border: 1px solid rgba(16, 185, 129, 0.2);
     }
 
     .header {
-        background: rgba(255, 255, 255, 0.98);
+        background: rgba(255, 255, 255, 0.95);
         backdrop-filter: blur(20px);
         border-radius: 20px;
         padding: 24px;
         margin-bottom: 20px;
-        box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        box-shadow: 0 10px 40px rgba(6, 78, 59, 0.2);
+        border: 2px solid rgba(16, 185, 129, 0.3);
     }
 
     .header h1 {
         font-size: 28px;
         font-weight: 800;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, #059669 0%, #064e3b 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
@@ -83,24 +106,25 @@
     .tab-btn {
         padding: 12px 20px;
         border: none;
-        background: #F3F4F6;
+        background: var(--jungle-bg);
         border-radius: 14px;
         font-weight: 600;
         font-size: 14px;
         cursor: pointer;
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         white-space: nowrap;
+        color: var(--jungle-dark);
     }
 
     .tab-btn:hover {
-        background: #E5E7EB;
+        background: var(--jungle-light);
         transform: translateY(-2px);
     }
 
     .tab-btn.active {
-        background: var(--primary);
+        background: var(--jungle-primary);
         color: white;
-        box-shadow: 0 4px 16px rgba(79, 70, 229, 0.4);
+        box-shadow: 0 4px 16px rgba(5, 150, 105, 0.4);
     }
 
     .tab-content {
@@ -127,48 +151,50 @@
 
     .controls input, .controls select, .controls button {
         padding: 12px 18px;
-        border: 2px solid #E5E7EB;
+        border: 2px solid rgba(16, 185, 129, 0.3);
         border-radius: 14px;
         font-size: 14px;
         font-weight: 600;
         transition: all 0.2s;
+        background: white;
     }
 
     .controls button {
-        background: var(--primary);
+        background: var(--jungle-primary);
         color: white;
         border: none;
         cursor: pointer;
-        box-shadow: 0 2px 8px rgba(79, 70, 229, 0.2);
+        box-shadow: 0 2px 8px rgba(5, 150, 105, 0.3);
     }
 
     .controls button:hover {
         transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(79, 70, 229, 0.3);
+        box-shadow: 0 6px 20px rgba(5, 150, 105, 0.4);
+        background: var(--jungle-dark);
     }
 
     .controls button:active {
         transform: translateY(0);
     }
 
-    .btn-success { background: var(--success) !important; }
+    .btn-success { background: var(--leaf-green) !important; }
     .btn-danger { background: var(--danger) !important; }
-    .btn-warning { background: var(--warning) !important; }
+    .btn-warning { background: var(--banana-yellow) !important; color: var(--earth-brown) !important; }
 
     /* Player Card */
     .player-card {
-        background: rgba(255, 255, 255, 0.98);
+        background: rgba(255, 255, 255, 0.95);
         backdrop-filter: blur(20px);
         border-radius: 18px;
         padding: 20px;
         margin-bottom: 16px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        box-shadow: 0 4px 20px rgba(6, 78, 59, 0.12);
         border-left: 6px solid;
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .player-card:hover {
-        box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+        box-shadow: 0 8px 30px rgba(6, 78, 59, 0.18);
         transform: translateY(-2px);
     }
 
@@ -183,11 +209,13 @@
         font-size: 20px;
         font-weight: 700;
         letter-spacing: -0.01em;
+        color: var(--jungle-dark);
     }
 
     .player-score {
         font-size: 32px;
         font-weight: 800;
+        color: var(--jungle-primary);
     }
 
     .status-badge {
@@ -198,7 +226,7 @@
         color: white;
     }
 
-    .status-in { background: var(--success); }
+    .status-in { background: var(--leaf-green); }
     .status-out { 
         background: var(--danger);
         animation: pulse 2s infinite;
@@ -210,15 +238,15 @@
     }
 
     .dealer-badge {
-        background: var(--warning);
-        color: white;
+        background: var(--banana-yellow);
+        color: var(--earth-brown);
         padding: 5px 12px;
         border-radius: 14px;
         font-size: 12px;
         font-weight: 700;
     }
 
-    /* Undo Button */
+    /* Undo Button - Jungle Themed */
     .undo-btn {
         position: fixed;
         bottom: 24px;
@@ -226,24 +254,77 @@
         width: 64px;
         height: 64px;
         border-radius: 50%;
-        background: var(--primary);
+        background: linear-gradient(135deg, var(--jungle-primary) 0%, var(--jungle-dark) 100%);
         color: white;
-        border: none;
+        border: 3px solid rgba(255, 255, 255, 0.3);
         font-size: 28px;
         cursor: pointer;
-        box-shadow: 0 8px 24px rgba(79, 70, 229, 0.4);
+        box-shadow: 0 8px 24px rgba(5, 150, 105, 0.5);
         z-index: 999;
         transition: all 0.3s;
     }
 
     .undo-btn:hover:not(:disabled) {
         transform: scale(1.1) rotate(-15deg);
+        box-shadow: 0 12px 32px rgba(5, 150, 105, 0.6);
     }
 
     .undo-btn:disabled {
         background: #9CA3AF;
         cursor: not-allowed;
         opacity: 0.5;
+    }
+
+    /* PIN Modal */
+    .pin-modal {
+        display: none;
+        position: fixed;
+        z-index: 2000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(6, 78, 59, 0.8);
+        backdrop-filter: blur(10px);
+    }
+
+    .pin-content {
+        background: white;
+        margin: 20% auto;
+        padding: 40px;
+        border-radius: 24px;
+        width: 90%;
+        max-width: 400px;
+        text-align: center;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+        border: 3px solid var(--jungle-primary);
+    }
+
+    .pin-input {
+        width: 100%;
+        padding: 16px;
+        font-size: 24px;
+        text-align: center;
+        border: 3px solid var(--jungle-primary);
+        border-radius: 14px;
+        margin: 20px 0;
+        letter-spacing: 8px;
+        font-weight: 700;
+    }
+
+    .pin-buttons {
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+    }
+
+    .pin-buttons button {
+        padding: 14px 28px;
+        border: none;
+        border-radius: 14px;
+        font-weight: 700;
+        cursor: pointer;
+        font-size: 16px;
     }
 
     /* Stats Grid */
@@ -255,17 +336,18 @@
     }
 
     .stat-card {
-        background: white;
+        background: linear-gradient(135deg, rgba(209, 250, 229, 0.5) 0%, rgba(255, 255, 255, 0.95) 100%);
         border-radius: 16px;
         padding: 20px;
         text-align: center;
-        box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+        box-shadow: 0 4px 16px rgba(6, 78, 59, 0.1);
+        border: 2px solid rgba(16, 185, 129, 0.2);
     }
 
     .stat-value {
         font-size: 36px;
         font-weight: 800;
-        color: var(--primary);
+        color: var(--jungle-primary);
     }
 
     .stat-label {
@@ -277,17 +359,17 @@
 
     /* History List */
     .history-item {
-        background: white;
+        background: linear-gradient(to right, var(--jungle-bg) 0%, white 100%);
         border-radius: 14px;
         padding: 16px;
         margin-bottom: 12px;
-        border-left: 4px solid var(--primary);
+        border-left: 4px solid var(--jungle-primary);
         cursor: pointer;
         transition: all 0.2s;
     }
 
     .history-item:hover {
-        box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+        box-shadow: 0 4px 16px rgba(6, 78, 59, 0.15);
         transform: translateX(4px);
     }
 
@@ -300,7 +382,7 @@
         top: 0;
         width: 100%;
         height: 100%;
-        background: rgba(0,0,0,0.6);
+        background: rgba(6, 78, 59, 0.7);
         backdrop-filter: blur(8px);
     }
 
@@ -313,8 +395,9 @@
         max-width: 700px;
         max-height: 85vh;
         overflow-y: auto;
-        box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        box-shadow: 0 20px 60px rgba(6, 78, 59, 0.4);
         animation: slideUp 0.3s ease;
+        border: 3px solid var(--jungle-primary);
     }
 
     @keyframes slideUp {
@@ -328,11 +411,11 @@
         align-items: center;
         margin-bottom: 24px;
         padding-bottom: 16px;
-        border-bottom: 2px solid #F3F4F6;
+        border-bottom: 2px solid var(--jungle-bg);
     }
 
     .modal-header h2 {
-        color: var(--primary);
+        color: var(--jungle-primary);
         font-size: 24px;
         font-weight: 800;
     }
@@ -347,18 +430,19 @@
     }
 
     .close-btn:hover {
-        color: #374151;
+        color: var(--jungle-dark);
         transform: rotate(90deg);
     }
 
-    /* Winner Section */
+    /* Winner Section - Jungle King */
     .winner-section {
-        background: linear-gradient(135deg, #FCD34D 0%, #F59E0B 100%);
+        background: linear-gradient(135deg, var(--banana-yellow) 0%, var(--jungle-light) 100%);
         border-radius: 20px;
         padding: 40px;
         text-align: center;
         margin-bottom: 30px;
-        box-shadow: 0 12px 40px rgba(245, 158, 11, 0.4);
+        box-shadow: 0 12px 40px rgba(5, 150, 105, 0.4);
+        border: 3px solid var(--jungle-primary);
     }
 
     .winner-crown {
@@ -376,7 +460,7 @@
     .winner-title {
         font-size: 42px;
         font-weight: 800;
-        color: #78350F;
+        color: var(--jungle-dark);
         text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
         margin: 20px 0;
     }
@@ -384,7 +468,7 @@
     .winner-name {
         font-size: 36px;
         font-weight: 700;
-        color: #1F2937;
+        color: var(--earth-brown);
     }
 
     /* Tables */
@@ -397,16 +481,18 @@
     th, td {
         padding: 12px;
         text-align: left;
-        border-bottom: 1px solid #E5E7EB;
+        border-bottom: 1px solid var(--jungle-bg);
     }
 
     th {
-        background: #F3F4F6;
+        background: var(--jungle-bg);
         font-weight: 700;
+        color: var(--jungle-dark);
     }
 
     .winner-row {
-        background: #FEF3C7 !important;
+        background: linear-gradient(to right, var(--banana-yellow) 0%, var(--jungle-bg) 100%) !important;
+        font-weight: 700;
     }
 
     /* Responsive */
@@ -417,18 +503,32 @@
         .winner-crown { font-size: 70px; }
         .winner-title { font-size: 28px; }
         .stats-grid { grid-template-columns: 1fr 1fr; }
+        .pin-content { margin: 40% auto; }
     }
 </style>
 ```
 
 </head>
 <body>
-    <button class="undo-btn" id="undoBtn" title="Undo Last Action" disabled>↩️</button>
+    <button class="undo-btn" id="undoBtn" title="Undo Last Score" disabled>↩️</button>
 
 ```
+<!-- PIN Modal -->
+<div class="pin-modal" id="pinModal">
+    <div class="pin-content">
+        <h2 style="color: var(--jungle-primary); margin-bottom: 20px;">🔒 Enter PIN</h2>
+        <p style="color: #6B7280; margin-bottom: 10px;">This action requires authentication</p>
+        <input type="password" class="pin-input" id="pinInput" placeholder="••••" maxlength="4" inputmode="numeric">
+        <div class="pin-buttons">
+            <button onclick="cancelPin()" style="background: #9CA3AF; color: white;">Cancel</button>
+            <button onclick="verifyPin()" style="background: var(--jungle-primary); color: white;">Submit</button>
+        </div>
+    </div>
+</div>
+
 <div class="container">
     <div class="header">
-        <h1>🐵 Weekend Monkeys Score Board - Ultimate</h1>
+        <h1>🐵 Monkeys Score Board</h1>
         
         <div class="tabs">
             <button class="tab-btn active" data-tab="game">🎮 Game</button>
@@ -457,14 +557,14 @@
         <div class="tab-content" id="history-tab">
             <div class="controls">
                 <button class="btn-success" id="saveGameBtn">💾 Save Game</button>
-                <button class="btn-primary" id="loadGamesBtn">📂 Load Game</button>
+                <button style="background: var(--jungle-primary); color: white;" id="loadGamesBtn">📂 Load Game</button>
                 <button class="btn-danger" id="clearHistoryBtn">🗑️ Clear History</button>
             </div>
         </div>
 
         <div class="tab-content" id="stats-tab">
             <div class="controls">
-                <button class="btn-primary" id="viewStatsBtn">📊 View All Stats</button>
+                <button style="background: var(--jungle-primary); color: white;" id="viewStatsBtn">📊 View All Stats</button>
                 <button class="btn-success" id="refreshStatsBtn">🔄 Refresh</button>
             </div>
         </div>
@@ -485,6 +585,9 @@
 <div id="statsModal" class="modal"></div>
 
 <script>
+    const PIN = '1986';
+    let pendingAction = null;
+
     const sounds = {
         enabled: true,
         play(freq, dur) {
@@ -507,15 +610,16 @@
         dealer() { this.play(440, 0.1); setTimeout(() => this.play(659, 0.15), 100); },
         out() { this.play(880, 0.1); setTimeout(() => this.play(523, 0.2), 150); },
         winner() { this.play(523, 0.15); setTimeout(() => this.play(783, 0.15), 150); setTimeout(() => this.play(1047, 0.3), 300); },
-        click() { this.play(800, 0.05); }
+        click() { this.play(800, 0.05); },
+        error() { this.play(200, 0.2); }
     };
 
-    const COLORS = ['#FFE5E5','#E5F3FF','#FFF5E5','#E5FFE5','#FFE5FF','#E5FFFF','#F5E5FF','#FFFFE5','#FFE5F0'];
+    const COLORS = ['#d1fae5','#a7f3d0','#6ee7b7','#86efac','#bbf7d0','#bef264','#fef08a','#fde68a','#fcd34d'];
     
     const INITIAL_PLAYERS = [
-        {name:'HABIN',color:'#FFE5E5'},{name:'NOUFAL',color:'#E5F3FF'},{name:'EMAD',color:'#FFF5E5'},
-        {name:'MUBASHIR',color:'#E5FFE5'},{name:'LEO',color:'#FFE5FF'},{name:'ASIF',color:'#E5FFFF'},
-        {name:'SHABIN',color:'#F5E5FF'},{name:'MUTHU',color:'#FFFFE5'},{name:'SALMAN',color:'#FFE5F0'}
+        {name:'HABIN',color:'#d1fae5'},{name:'NOUFAL',color:'#a7f3d0'},{name:'EMAD',color:'#6ee7b7'},
+        {name:'MUBASHIR',color:'#86efac'},{name:'LEO',color:'#bbf7d0'},{name:'ASIF',color:'#bef264'},
+        {name:'SHABIN',color:'#fef08a'},{name:'MUTHU',color:'#fde68a'},{name:'SALMAN',color:'#fcd34d'}
     ];
 
     let state = {
@@ -530,8 +634,38 @@
         playerStats: {}
     };
 
+    function showPinModal(action) {
+        pendingAction = action;
+        document.getElementById('pinModal').style.display = 'block';
+        document.getElementById('pinInput').value = '';
+        document.getElementById('pinInput').focus();
+    }
+
+    function cancelPin() {
+        document.getElementById('pinModal').style.display = 'none';
+        pendingAction = null;
+        document.getElementById('pinInput').value = '';
+    }
+
+    function verifyPin() {
+        const input = document.getElementById('pinInput').value;
+        if (input === PIN) {
+            document.getElementById('pinModal').style.display = 'none';
+            document.getElementById('pinInput').value = '';
+            if (pendingAction) {
+                pendingAction();
+                pendingAction = null;
+            }
+        } else {
+            sounds.error();
+            alert('❌ Incorrect PIN!');
+            document.getElementById('pinInput').value = '';
+            document.getElementById('pinInput').focus();
+        }
+    }
+
     function load() {
-        const saved = localStorage.getItem('monkeysUltimate');
+        const saved = localStorage.getItem('monkeysJungle');
         if (saved) {
             try {
                 const data = JSON.parse(saved);
@@ -542,7 +676,7 @@
     }
 
     function save() {
-        localStorage.setItem('monkeysUltimate', JSON.stringify(state));
+        localStorage.setItem('monkeysJungle', JSON.stringify(state));
         localStorage.setItem('soundEnabled', sounds.enabled);
     }
 
@@ -560,15 +694,6 @@
         if (action.type === 'addScore') {
             const p = state.players.find(pl => pl.id === action.playerId);
             if (p && p.scores.length > 0) p.scores.pop();
-        } else if (action.type === 'removeScore') {
-            const p = state.players.find(pl => pl.id === action.playerId);
-            if (p) p.scores.push(action.score);
-        } else if (action.type === 'addPlayer') {
-            state.players = state.players.filter(p => p.id !== action.playerId);
-        } else if (action.type === 'setDealer') {
-            if (action.roundIndex >= 0) {
-                state.roundDealers[action.roundIndex] = action.previousDealer;
-            }
         }
         
         document.getElementById('undoBtn').disabled = state.undoStack.length === 0;
@@ -650,9 +775,7 @@
         const p = state.players.find(pl => pl.id === id);
         if (!p || p.scores.length === 0) return;
         
-        const score = p.scores.pop();
-        pushUndo({type: 'removeScore', playerId: id, score});
-        
+        p.scores.pop();
         sounds.remove();
         save();
         render();
@@ -663,10 +786,7 @@
         const p = state.players.find(pl => pl.id === id);
         if (!p) return;
         
-        const prev = state.roundDealers[round];
         state.roundDealers[round] = p.name;
-        pushUndo({type: 'setDealer', roundIndex: round, previousDealer: prev});
-        
         sounds.dealer();
         save();
         render();
@@ -704,7 +824,6 @@
         
         state.gameHistory.push(gameData);
         
-        // Update player stats
         const winner = getWinner();
         state.players.forEach(p => {
             const total = getTotal(p);
@@ -742,7 +861,7 @@
             const winner = game.winner ? game.winner.name : 'No winner';
             html += `
                 <div class="history-item" onclick="loadGame(${i})">
-                    <div style="font-weight:700; font-size:16px;">${game.name}</div>
+                    <div style="font-weight:700; font-size:16px; color: var(--jungle-dark);">${game.name}</div>
                     <div style="color:#6B7280; font-size:13px; margin-top:4px;">
                         ${date} • ${game.players.length} players • Winner: ${winner}
                     </div>
@@ -777,11 +896,12 @@
     }
 
     function clearHistory() {
-        if (!confirm('⚠️ Delete ALL game history? This cannot be undone!')) return;
-        state.gameHistory = [];
-        sounds.click();
-        save();
-        alert('✅ History cleared!');
+        showPinModal(() => {
+            state.gameHistory = [];
+            sounds.click();
+            save();
+            alert('✅ History cleared!');
+        });
     }
 
     function viewStats() {
@@ -805,20 +925,20 @@
             
             html += `
                 <div class="stat-card">
-                    <div style="font-size:18px; font-weight:700; margin-bottom:16px;">${name}</div>
+                    <div style="font-size:18px; font-weight:700; margin-bottom:16px; color: var(--jungle-dark);">${name}</div>
                     <div class="stat-value">${stats.gamesPlayed}</div>
                     <div class="stat-label">Games Played</div>
                     <div style="margin-top:16px;">
-                        <div style="font-size:20px; font-weight:700; color:var(--success);">${stats.wins}</div>
+                        <div style="font-size:20px; font-weight:700; color:var(--leaf-green);">${stats.wins}</div>
                         <div class="stat-label">Wins (${winRate}%)</div>
                     </div>
                     <div style="margin-top:16px;">
-                        <div style="font-size:18px; font-weight:600;">${avg}</div>
+                        <div style="font-size:18px; font-weight:600; color: var(--jungle-primary);">${avg}</div>
                         <div class="stat-label">Avg Score</div>
                     </div>
                     <div style="margin-top:12px; display:flex; justify-content:space-around;">
                         <div>
-                            <div style="font-size:16px; font-weight:600; color:var(--success);">${best}</div>
+                            <div style="font-size:16px; font-weight:600; color:var(--leaf-green);">${best}</div>
                             <div style="font-size:11px; color:#9CA3AF;">Best</div>
                         </div>
                         <div>
@@ -854,9 +974,9 @@
                 <div class="winner-section">
                     <div class="winner-crown">👑</div>
                     <div class="winner-monkey">🐵</div>
-                    <div class="winner-title">CHAMPION!</div>
+                    <div class="winner-title">JUNGLE KING!</div>
                     <div class="winner-name">${winner.name}</div>
-                    <div style="font-size:24px; color:#374151; margin-top:12px;">
+                    <div style="font-size:24px; color:var(--earth-brown); margin-top:12px; font-weight: 700;">
                         Score: ${getTotal(winner)} points
                     </div>
                 </div>
@@ -865,7 +985,7 @@
         
         html += `
             <div style="margin-bottom:24px;">
-                <h3 style="color:var(--primary); font-size:18px; margin-bottom:12px;">Game Info</h3>
+                <h3 style="color:var(--jungle-primary); font-size:18px; margin-bottom:12px;">Game Info</h3>
                 <p><strong>Game:</strong> ${state.gameName}</p>
                 <p><strong>Target:</strong> ${state.targetPoint}</p>
                 <p><strong>Players:</strong> ${state.players.length}</p>
@@ -876,7 +996,7 @@
         if (maxRounds > 0) {
             html += `
                 <div>
-                    <h3 style="color:var(--primary); font-size:18px; margin-bottom:12px;">Scores</h3>
+                    <h3 style="color:var(--jungle-primary); font-size:18px; margin-bottom:12px;">Scores</h3>
                     <table>
                         <thead>
                             <tr>
@@ -909,7 +1029,7 @@
         }
         
         html += `
-            <button style="width:100%; padding:14px; background:var(--primary); color:white; border:none; border-radius:14px; font-size:16px; font-weight:700; cursor:pointer; margin-top:20px;" onclick="copyReport()">
+            <button style="width:100%; padding:14px; background:var(--jungle-primary); color:white; border:none; border-radius:14px; font-size:16px; font-weight:700; cursor:pointer; margin-top:20px;" onclick="copyReport()">
                 📋 Copy Report
             </button>
         </div>`;
@@ -922,10 +1042,10 @@
         const winner = getWinner();
         const maxRounds = getMaxRounds();
         
-        let text = `🐵 WEEKEND MONKEYS SCORE BOARD\n${'='.repeat(50)}\n\n`;
+        let text = `🐵 MONKEYS SCORE BOARD\n${'='.repeat(50)}\n\n`;
         
         if (winner) {
-            text += `👑 CHAMPION: ${winner.name}\n`;
+            text += `👑 JUNGLE KING: ${winner.name}\n`;
             text += `Score: ${getTotal(winner)} points\n\n`;
         }
         
@@ -999,13 +1119,13 @@
                         <input type="number" id="score-${p.id}" placeholder="Score" style="flex:1;" data-player-id="${p.id}">
                         <button class="btn-success" data-action="add" data-id="${p.id}">➕</button>
                         <button class="btn-warning" data-action="remove" data-id="${p.id}" ${p.scores.length === 0 ? 'disabled' : ''}>🗑️</button>
-                        <button class="${isDealer ? 'btn-warning' : ''}" data-action="dealer" data-id="${p.id}" style="${isDealer ? '' : 'background:#F3F4F6; color:#374151;'}">🃏</button>
+                        <button class="${isDealer ? 'btn-warning' : ''}" data-action="dealer" data-id="${p.id}" style="${isDealer ? '' : 'background:var(--jungle-bg); color:var(--jungle-dark);'}">🃏</button>
                     </div>
                     
                     ${p.scores.length > 0 ? `
                         <div style="display:flex; gap:6px; flex-wrap:wrap;">
                             ${p.scores.map((s, i) => `
-                                <span style="background:white; padding:5px 12px; border-radius:12px; font-size:13px; font-weight:600;">
+                                <span style="background:white; padding:5px 12px; border-radius:12px; font-size:13px; font-weight:600; border: 1px solid var(--jungle-primary);">
                                     R${i+1}: ${s}
                                 </span>
                             `).join('')}
@@ -1044,6 +1164,10 @@
         
         render();
         
+        document.getElementById('pinInput').addEventListener('keypress', e => {
+            if (e.key === 'Enter') verifyPin();
+        });
+        
         document.querySelectorAll('.tab-btn').forEach(btn => {
             btn.addEventListener('click', function() {
                 document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -1064,7 +1188,7 @@
         document.getElementById('undoBtn').addEventListener('click', undo);
         
         document.getElementById('resetPointsBtn').addEventListener('click', () => {
-            if (confirm('⚠️ Reset all scores? Keeps players.')) {
+            showPinModal(() => {
                 state.players.forEach(p => { p.scores = []; p.dealerHistory = []; });
                 state.roundDealers = [];
                 state.undoStack = [];
@@ -1072,11 +1196,11 @@
                 save();
                 render();
                 alert('✅ Scores reset!');
-            }
+            });
         });
         
         document.getElementById('resetPlayersBtn').addEventListener('click', () => {
-            if (confirm('⚠️ Delete ALL players? Cannot be undone!')) {
+            showPinModal(() => {
                 state.players = [];
                 state.roundDealers = [];
                 state.undoStack = [];
@@ -1084,7 +1208,7 @@
                 save();
                 render();
                 alert('✅ Players deleted!');
-            }
+            });
         });
         
         document.getElementById('addPlayerBtn').addEventListener('click', addPlayer);
