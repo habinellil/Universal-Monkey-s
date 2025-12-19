@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -166,21 +167,21 @@ const PIN='1986';
 let pendingAction=null,currentPhotoPlayer=null;
 
 // GitHub sync variables
-let githubAuth={token:null,user:null,repo:'monkeys-scoreboard-data',syncEnabled:false};
+let githubAuth={token:null,user:null,repo:‘monkeys-scoreboard-data’,syncEnabled:false};
 let syncTimeout=null;
 
 const sounds={enabled:!0,play(f,d){if(!this.enabled)return;try{const c=new(window.AudioContext||window.webkitAudioContext)(),o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.frequency.value=f;g.gain.setValueAtTime(.3,c.currentTime);g.gain.exponentialRampToValueAtTime(.01,c.currentTime+d);o.start();o.stop(c.currentTime+d)}catch(e){}},add(){this.play(523,.1);setTimeout(()=>this.play(659,.1),80)},remove(){this.play(392,.15)},dealer(){this.play(440,.1);setTimeout(()=>this.play(659,.15),100)},out(){this.play(880,.1);setTimeout(()=>this.play(523,.2),150)},winner(){this.play(523,.15);setTimeout(()=>this.play(783,.15),150);setTimeout(()=>this.play(1047,.3),300)},click(){this.play(800,.05)},error(){this.play(200,.2)}};
-const COLORS=['#d1fae5','#a7f3d0','#6ee7b7','#86efac','#bbf7d0','#bef264','#fef08a','#fde68a','#fcd34d'];
+const COLORS=[’#d1fae5’,’#a7f3d0’,’#6ee7b7’,’#86efac’,’#bbf7d0’,’#bef264’,’#fef08a’,’#fde68a’,’#fcd34d’];
 const INITIAL=[
-{name:'HABIN',color:'#d1fae5'},{name:'NOUFAL',color:'#a7f3d0'},{name:'EMAD',color:'#6ee7b7'},
-{name:'MUBASHIR',color:'#86efac'},{name:'LEO',color:'#bbf7d0'},{name:'ASIF',color:'#bef264'},
-{name:'SHABIN',color:'#fef08a'},{name:'MUTHU',color:'#fde68a'},{name:'SALMAN',color:'#fcd34d'}
+{name:‘HABIN’,color:’#d1fae5’},{name:‘NOUFAL’,color:’#a7f3d0’},{name:‘EMAD’,color:’#6ee7b7’},
+{name:‘MUBASHIR’,color:’#86efac’},{name:‘LEO’,color:’#bbf7d0’},{name:‘ASIF’,color:’#bef264’},
+{name:‘SHABIN’,color:’#fef08a’},{name:‘MUTHU’,color:’#fde68a’},{name:‘SALMAN’,color:’#fcd34d’}
 ];
-let state={gameName:'Rummy',targetPoint:330,players:INITIAL.map((p,i)=>({...p,id:Date.now()+i,scores:[],photo:'',dealerHistory:[]})),sortBy:'default',nextId:Date.now()+INITIAL.length,roundDealers:[],undoStack:[],gameHistory:[],playerStats:{},gallery:[]};
+let state={gameName:‘Rummy’,targetPoint:330,players:INITIAL.map((p,i)=>({…p,id:Date.now()+i,scores:[],photo:’’,dealerHistory:[]})),sortBy:‘default’,nextId:Date.now()+INITIAL.length,roundDealers:[],undoStack:[],gameHistory:[],playerStats:{},gallery:[]};
 
 // GitHub Sync Functions
 async function initGitHubAuth(){
-const saved=localStorage.getItem('githubAuth');
+const saved=localStorage.getItem(‘githubAuth’);
 if(saved){
 try{
 githubAuth=JSON.parse(saved);
@@ -194,62 +195,62 @@ renderSyncTab();
 
 async function verifyGitHubToken(){
 try{
-const resp=await fetch('https://api.github.com/user',{
-headers:{'Authorization':`token ${githubAuth.token}`}
+const resp=await fetch(‘https://api.github.com/user’,{
+headers:{‘Authorization’:`token ${githubAuth.token}`}
 });
 if(resp.ok){
 githubAuth.user=await resp.json();
 githubAuth.syncEnabled=true;
-localStorage.setItem('githubAuth',JSON.stringify(githubAuth));
-showSyncStatus('synced','✓ Synced');
+localStorage.setItem(‘githubAuth’,JSON.stringify(githubAuth));
+showSyncStatus(‘synced’,‘✓ Synced’);
 return true;
 }else{
-throw new Error('Invalid token');
+throw new Error(‘Invalid token’);
 }
 }catch(e){
 githubAuth.token=null;
 githubAuth.user=null;
 githubAuth.syncEnabled=false;
-localStorage.removeItem('githubAuth');
-showSyncStatus('error','✗ Auth failed');
+localStorage.removeItem(‘githubAuth’);
+showSyncStatus(‘error’,‘✗ Auth failed’);
 return false;
 }
 }
 
 function loginGitHub(){
-const token=prompt('Enter your GitHub Personal Access Token:\n\n1. Go to github.com/settings/tokens\n2. Generate new token (classic)\n3. Select "repo" scope\n4. Copy and paste token here');
+const token=prompt(‘Enter your GitHub Personal Access Token:\n\n1. Go to github.com/settings/tokens\n2. Generate new token (classic)\n3. Select “repo” scope\n4. Copy and paste token here’);
 if(!token)return;
 githubAuth.token=token.trim();
 verifyGitHubToken().then(valid=>{
 if(valid){
-alert('✅ Connected to GitHub!');
+alert(‘✅ Connected to GitHub!’);
 renderSyncTab();
 syncToGitHub();
 }else{
-alert('❌ Invalid token. Please try again.');
+alert(‘❌ Invalid token. Please try again.’);
 }
 });
 }
 
 function logoutGitHub(){
-if(!confirm('Disconnect from GitHub?'))return;
-githubAuth={token:null,user:null,repo:'monkeys-scoreboard-data',syncEnabled:false};
-localStorage.removeItem('githubAuth');
-document.getElementById('syncStatus').style.display='none';
+if(!confirm(‘Disconnect from GitHub?’))return;
+githubAuth={token:null,user:null,repo:‘monkeys-scoreboard-data’,syncEnabled:false};
+localStorage.removeItem(‘githubAuth’);
+document.getElementById(‘syncStatus’).style.display=‘none’;
 renderSyncTab();
-alert('✅ Disconnected');
+alert(‘✅ Disconnected’);
 }
 
 async function syncToGitHub(){
 if(!githubAuth.syncEnabled||!githubAuth.token)return;
-showSyncStatus('syncing','⏳ Syncing...');
+showSyncStatus(‘syncing’,‘⏳ Syncing…’);
 try{
 const content=btoa(unescape(encodeURIComponent(JSON.stringify(state,null,2))));
-const path='scoreboard-data.json';
+const path=‘scoreboard-data.json’;
 let sha=null;
 try{
 const getResp=await fetch(`https://api.github.com/repos/${githubAuth.user.login}/${githubAuth.repo}/contents/${path}`,{
-headers:{'Authorization':`token ${githubAuth.token}`}
+headers:{‘Authorization’:`token ${githubAuth.token}`}
 });
 if(getResp.ok){
 const data=await getResp.json();
@@ -257,88 +258,88 @@ sha=data.sha;
 }
 }catch(e){}
 const body={
-message:'Update scoreboard data',
+message:‘Update scoreboard data’,
 content:content,
-...(sha&&{sha})
+…(sha&&{sha})
 };
 const resp=await fetch(`https://api.github.com/repos/${githubAuth.user.login}/${githubAuth.repo}/contents/${path}`,{
-method:'PUT',
+method:‘PUT’,
 headers:{
-'Authorization':`token ${githubAuth.token}`,
-'Content-Type':'application/json'
+‘Authorization’:`token ${githubAuth.token}`,
+‘Content-Type’:‘application/json’
 },
 body:JSON.stringify(body)
 });
 if(resp.ok){
-showSyncStatus('synced','✓ Synced',2000);
+showSyncStatus(‘synced’,‘✓ Synced’,2000);
 }else if(resp.status===404){
 await createGitHubRepo();
 await syncToGitHub();
 }else{
-throw new Error('Sync failed');
+throw new Error(‘Sync failed’);
 }
 }catch(e){
-showSyncStatus('error','✗ Sync failed',3000);
-console.error('Sync error:',e);
+showSyncStatus(‘error’,‘✗ Sync failed’,3000);
+console.error(‘Sync error:’,e);
 }
 }
 
 async function createGitHubRepo(){
 try{
-const resp=await fetch('https://api.github.com/user/repos',{
-method:'POST',
+const resp=await fetch(‘https://api.github.com/user/repos’,{
+method:‘POST’,
 headers:{
-'Authorization':`token ${githubAuth.token}`,
-'Content-Type':'application/json'
+‘Authorization’:`token ${githubAuth.token}`,
+‘Content-Type’:‘application/json’
 },
 body:JSON.stringify({
 name:githubAuth.repo,
-description:'Monkeys Scoreboard Data',
+description:‘Monkeys Scoreboard Data’,
 private:true,
 auto_init:true
 })
 });
-if(!resp.ok)throw new Error('Failed to create repo');
+if(!resp.ok)throw new Error(‘Failed to create repo’);
 }catch(e){
-console.error('Create repo error:',e);
+console.error(‘Create repo error:’,e);
 }
 }
 
 async function syncFromGitHub(){
 if(!githubAuth.syncEnabled||!githubAuth.token)return;
-showSyncStatus('syncing','⏳ Loading...');
+showSyncStatus(‘syncing’,‘⏳ Loading…’);
 try{
 const resp=await fetch(`https://api.github.com/repos/${githubAuth.user.login}/${githubAuth.repo}/contents/scoreboard-data.json`,{
-headers:{'Authorization':`token ${githubAuth.token}`}
+headers:{‘Authorization’:`token ${githubAuth.token}`}
 });
 if(resp.ok){
 const data=await resp.json();
 const content=JSON.parse(decodeURIComponent(escape(atob(data.content))));
-state={...state,...content};
+state={…state,…content};
 save();
 render();
 renderGallery();
-showSyncStatus('synced','✓ Loaded',2000);
-alert('✅ Data loaded from GitHub!');
+showSyncStatus(‘synced’,‘✓ Loaded’,2000);
+alert(‘✅ Data loaded from GitHub!’);
 }else{
-throw new Error('No data found');
+throw new Error(‘No data found’);
 }
 }catch(e){
-showSyncStatus('error','✗ Load failed',3000);
-alert('❌ No data found on GitHub');
+showSyncStatus(‘error’,‘✗ Load failed’,3000);
+alert(‘❌ No data found on GitHub’);
 }
 }
 
 function showSyncStatus(type,text,hideAfter=0){
-const status=document.getElementById('syncStatus');
-const icon=document.getElementById('syncIcon');
-const textEl=document.getElementById('syncText');
-status.className='sync-status '+type;
-status.style.display='flex';
-icon.textContent=type==='syncing'?'⏳':type==='synced'?'✓':'✗';
+const status=document.getElementById(‘syncStatus’);
+const icon=document.getElementById(‘syncIcon’);
+const textEl=document.getElementById(‘syncText’);
+status.className=’sync-status ’+type;
+status.style.display=‘flex’;
+icon.textContent=type===‘syncing’?‘⏳’:type===‘synced’?‘✓’:‘✗’;
 textEl.textContent=text;
 if(hideAfter>0){
-setTimeout(()=>status.style.display='none',hideAfter);
+setTimeout(()=>status.style.display=‘none’,hideAfter);
 }
 }
 
@@ -349,9 +350,10 @@ syncTimeout=setTimeout(()=>syncToGitHub(),2000);
 }
 
 function renderSyncTab(){
-const content=document.getElementById('syncTabContent');
+const content=document.getElementById(‘syncTabContent’);
 if(!githubAuth.syncEnabled||!githubAuth.user){
 content.innerHTML=`
+
 <div style="text-align:center;padding:40px">
 <div style="font-size:80px;margin-bottom:20px">☁️</div>
 <h2 style="color:var(--j-primary);margin-bottom:16px">Cloud Sync with GitHub</h2>
