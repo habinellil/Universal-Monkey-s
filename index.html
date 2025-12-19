@@ -1,13 +1,10 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <meta name="theme-color" content="#059669">
 <title>🐵 Monkeys Score Board</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{--j-dark:#064e3b;--j-primary:#059669;--j-light:#6ee7b7;--j-bg:#d1fae5;--brown:#92400e;--leaf:#10b981;--yellow:#fbbf24;--danger:#dc2626}
@@ -67,13 +64,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .cert-seal-text{font-size:10pt;font-weight:800;color:#92400e;text-align:center}
 .cert-seal-icon{font-size:32pt;margin-bottom:2mm}
 .cert-date{font-size:10pt;color:#6B7280;margin-top:8mm}
-.sync-status{position:fixed;top:20px;right:20px;background:rgba(255,255,255,.95);padding:12px 20px;border-radius:14px;box-shadow:0 4px 16px rgba(0,0,0,.2);display:flex;align-items:center;gap:10px;z-index:1000;font-weight:600;font-size:14px}
-.sync-status.syncing{background:var(--yellow);color:var(--brown)}
-.sync-status.synced{background:var(--leaf);color:white}
-.sync-status.error{background:var(--danger);color:white}
-.github-btn{background:linear-gradient(135deg,#24292e,#000);color:white;padding:12px 24px;border:none;border-radius:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:8px;transition:all .3s}
-.github-btn:hover{transform:translateY(-2px);box-shadow:0 4px 16px rgba(0,0,0,.3)}
-@media print{body{background:white!important}.cert-container{box-shadow:none;margin:0;width:297mm;height:210mm;page-break-after:always}@page{size:A4 landscape;margin:0}.modal,.header,.tabs,.controls,button:not(.no-hide),.sync-status{display:none!important}}
+@media print{body{background:white!important}.cert-container{box-shadow:none;margin:0;width:297mm;height:210mm;page-break-after:always}@page{size:A4 landscape;margin:0}.modal,.header,.tabs,.controls,button:not(.no-hide){display:none!important}}
 .gallery-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin:20px 0}
 .gallery-item{position:relative;border-radius:12px;overflow:hidden;cursor:pointer;aspect-ratio:1}
 .gallery-item img{width:100%;height:100%;object-fit:cover;transition:transform .3s}
@@ -88,17 +79,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 <div class="pin-content">
 <h2 style="color:var(--j-primary);margin-bottom:20px">🔒 Enter PIN</h2>
 <input type="password" class="pin-input" id="pinInput" placeholder="••••" maxlength="4">
-<div style="display:flex;gap:12px;justify-center">
+<div style="display:flex;gap:12px;justify-content:center">
 <button onclick="cancelPin()" style="padding:14px 28px;border:none;border-radius:14px;font-weight:700;cursor:pointer;background:#9CA3AF;color:white">Cancel</button>
 <button onclick="verifyPin()" style="padding:14px 28px;border:none;border-radius:14px;font-weight:700;cursor:pointer;background:var(--j-primary);color:white">Submit</button>
 </div>
 </div>
 </div>
 <div class="container">
-<div id="syncStatus" class="sync-status" style="display:none">
-<span id="syncIcon">⏳</span>
-<span id="syncText">Syncing...</span>
-</div>
 <div class="header">
 <h1>🐵 Monkeys Score Board</h1>
 <div class="tabs">
@@ -106,7 +93,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 <button class="tab-btn" data-tab="history">📚 History</button>
 <button class="tab-btn" data-tab="stats">📈 Stats</button>
 <button class="tab-btn" data-tab="gallery">📸 Gallery</button>
-<button class="tab-btn" data-tab="sync">☁️ Sync</button>
 </div>
 <div class="tab-content active" id="game-tab">
 <div class="controls">
@@ -145,9 +131,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 </div>
 <div class="gallery-grid" id="galleryGrid"></div>
 </div>
-<div class="tab-content" id="sync-tab">
-<div id="syncTabContent"></div>
-</div>
 </div>
 <div class="card">
 <div class="controls">
@@ -165,236 +148,51 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 <script>
 const PIN='1986';
 let pendingAction=null,currentPhotoPlayer=null;
-
-// GitHub sync variables
-let githubAuth={token:null,user:null,repo:‘monkeys-scoreboard-data’,syncEnabled:false};
-let syncTimeout=null;
-
 const sounds={enabled:!0,play(f,d){if(!this.enabled)return;try{const c=new(window.AudioContext||window.webkitAudioContext)(),o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.frequency.value=f;g.gain.setValueAtTime(.3,c.currentTime);g.gain.exponentialRampToValueAtTime(.01,c.currentTime+d);o.start();o.stop(c.currentTime+d)}catch(e){}},add(){this.play(523,.1);setTimeout(()=>this.play(659,.1),80)},remove(){this.play(392,.15)},dealer(){this.play(440,.1);setTimeout(()=>this.play(659,.15),100)},out(){this.play(880,.1);setTimeout(()=>this.play(523,.2),150)},winner(){this.play(523,.15);setTimeout(()=>this.play(783,.15),150);setTimeout(()=>this.play(1047,.3),300)},click(){this.play(800,.05)},error(){this.play(200,.2)}};
-const COLORS=[’#d1fae5’,’#a7f3d0’,’#6ee7b7’,’#86efac’,’#bbf7d0’,’#bef264’,’#fef08a’,’#fde68a’,’#fcd34d’];
+const COLORS=['#d1fae5','#a7f3d0','#6ee7b7','#86efac','#bbf7d0','#bef264','#fef08a','#fde68a','#fcd34d'];
 const INITIAL=[
-{name:‘HABIN’,color:’#d1fae5’},{name:‘NOUFAL’,color:’#a7f3d0’},{name:‘EMAD’,color:’#6ee7b7’},
-{name:‘MUBASHIR’,color:’#86efac’},{name:‘LEO’,color:’#bbf7d0’},{name:‘ASIF’,color:’#bef264’},
-{name:‘SHABIN’,color:’#fef08a’},{name:‘MUTHU’,color:’#fde68a’},{name:‘SALMAN’,color:’#fcd34d’}
+{name:'HABIN',color:'#d1fae5'},{name:'NOUFAL',color:'#a7f3d0'},{name:'EMAD',color:'#6ee7b7'},
+{name:'MUBASHIR',color:'#86efac'},{name:'LEO',color:'#bbf7d0'},{name:'ASIF',color:'#bef264'},
+{name:'SHABIN',color:'#fef08a'},{name:'MUTHU',color:'#fde68a'},{name:'SALMAN',color:'#fcd34d'}
 ];
-let state={gameName:‘Rummy’,targetPoint:330,players:INITIAL.map((p,i)=>({…p,id:Date.now()+i,scores:[],photo:’’,dealerHistory:[]})),sortBy:‘default’,nextId:Date.now()+INITIAL.length,roundDealers:[],undoStack:[],gameHistory:[],playerStats:{},gallery:[]};
+let state={gameName:'Rummy',targetPoint:330,players:INITIAL.map((p,i)=>({...p,id:Date.now()+i,scores:[],photo:'',dealerHistory:[]})),sortBy:'default',nextId:Date.now()+INITIAL.length,roundDealers:[],undoStack:[],gameHistory:[],playerStats:{},gallery:[]};
+function showPin(a){pendingAction=a;document.getElementById('pinModal').style.display='block';document.getElementById('pinInput').value='';document.getElementById('pinInput').focus()}
+function cancelPin(){document.getElementById('pinModal').style.display='none';pendingAction=null;document.getElementById('pinInput').value=''}
+function verifyPin(){const i=document.getElementById('pinInput').value;if(i===PIN){document.getElementById('pinModal').style.display='none';document.getElementById('pinInput').value='';if(pendingAction){pendingAction();pendingAction=null}}else{sounds.error();alert('❌ Wrong PIN!');document.getElementById('pinInput').value='';document.getElementById('pinInput').focus()}}
+function load(){const s=localStorage.getItem('monkeysJungle');if(s){try{const d=JSON.parse(s);state={...state,...d}}catch(e){}}sounds.enabled=localStorage.getItem('soundEnabled')!=='false'}
+function save(){localStorage.setItem('monkeysJungle',JSON.stringify(state));localStorage.setItem('soundEnabled',sounds.enabled)}
+function pushUndo(a){state.undoStack.push(JSON.parse(JSON.stringify(a)));if(state.undoStack.length>20)state.undoStack.shift();document.getElementById('undoBtn').disabled=!1;save()}
+function undo(){if(state.undoStack.length===0)return;const a=state.undoStack.pop();if(a.type==='addScore'){const p=state.players.find(pl=>pl.id===a.playerId);if(p&&p.scores.length>0)p.scores.pop()}document.getElementById('undoBtn').disabled=state.undoStack.length===0;sounds.click();save();render()}
+function getSorted(){let s=[...state.players];if(state.sortBy==='name')s.sort((a,b)=>a.name.localeCompare(b.name));else if(state.sortBy==='points')s.sort((a,b)=>getTotal(b)-getTotal(a));return s}
+function getTotal(p){return p.scores.reduce((s,v)=>s+v,0)}
+function getMaxRounds(){return Math.max(...state.players.map(p=>p.scores.length),0)}
+function getWinner(){const w=state.players.filter(p=>p.scores.length>0);if(w.length===0)return null;return w.reduce((l,p)=>getTotal(p)<getTotal(l)?p:l)}
+function addPlayer(){const i=document.getElementById('newPlayerName'),n=i.value.trim().toUpperCase();if(!n)return alert('Enter name');if(state.players.some(p=>p.name===n))return alert('Player exists');const pl={id:state.nextId++,name:n,color:COLORS[state.players.length%COLORS.length],scores:[],photo:'',dealerHistory:[]};state.players.push(pl);pushUndo({type:'addPlayer',playerId:pl.id});i.value='';sounds.click();save();render()}
+function addScore(id){const i=document.getElementById(`score-${id}`),s=parseInt(i.value);if(isNaN(s))return;const p=state.players.find(pl=>pl.id===id);if(!p)return;const wo=getTotal(p)>=state.targetPoint;p.scores.push(s);const io=getTotal(p)>=state.targetPoint;pushUndo({type:'addScore',playerId:id,score:s});i.value='';sounds.add();if(!wo&&io){sounds.out();const c=document.querySelector(`[data-player-id="${id}"]`);if(c){c.style.animation='none';setTimeout(()=>c.style.animation='pulse .5s',10)}}updateStats();save();render()}
+function removeScore(id){const p=state.players.find(pl=>pl.id===id);if(!p||p.scores.length===0)return;p.scores.pop();sounds.remove();save();render()}
+function setDealer(id){const r=getMaxRounds(),p=state.players.find(pl=>pl.id===id);if(!p)return;state.roundDealers[r]=p.name;sounds.dealer();save();render()}
+function updateStats(){state.players.forEach(p=>{if(!state.playerStats[p.name])state.playerStats[p.name]={gamesPlayed:0,wins:0,totalScore:0,bestScore:Infinity,worstScore:0}})}
+function saveGame(){if(state.players.length===0)return alert('No players');const gn=prompt('Game name:',state.gameName+' - '+new Date().toLocaleDateString());if(!gn)return;const gd={name:gn,date:new Date().toISOString(),gameName:state.gameName,targetPoint:state.targetPoint,players:JSON.parse(JSON.stringify(state.players)),roundDealers:[...state.roundDealers],winner:getWinner()};state.gameHistory.push(gd);const w=getWinner();state.players.forEach(p=>{const t=getTotal(p);if(t>0){const st=state.playerStats[p.name];st.gamesPlayed++;if(w&&p.id===w.id)st.wins++;st.totalScore+=t;st.bestScore=Math.min(st.bestScore,t);st.worstScore=Math.max(st.worstScore,t)}});sounds.click();save();alert('✅ Saved!')}
+function loadGames(){if(state.gameHistory.length===0)return alert('No saved games');let h=`<div class="modal-content"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;padding-bottom:16px;border-bottom:2px solid var(--j-bg)"><h2 style="color:var(--j-primary);font-size:24px;font-weight:800">📚 History</h2><button style="font-size:32px;border:none;background:none;cursor:pointer;color:#9CA3AF" onclick="closeModal('historyModal')">&times;</button></div><div style="max-height:60vh;overflow-y:auto">`;state.gameHistory.forEach((g,i)=>{const d=new Date(g.date).toLocaleString(),w=g.winner?g.winner.name:'None';h+=`<div style="background:linear-gradient(to right,var(--j-bg),white);border-radius:14px;padding:16px;margin-bottom:12px;border-left:4px solid var(--j-primary);cursor:pointer;transition:all .2s" onclick="loadGame(${i})"><div style="font-weight:700;font-size:16px;color:var(--j-dark)">${g.name}</div><div style="color:#6B7280;font-size:13px;margin-top:4px">${d} • ${g.players.length} players • Winner: ${w}</div></div>`});h+=`</div></div>`;document.getElementById('historyModal').innerHTML=h;document.getElementById('historyModal').style.display='block'}
+function loadGame(i){if(!confirm('Load game?'))return;const g=state.gameHistory[i];state.gameName=g.gameName;state.targetPoint=g.targetPoint;state.players=JSON.parse(JSON.stringify(g.players));state.roundDealers=[...g.roundDealers];state.undoStack=[];document.getElementById('gameName').value=state.gameName;document.getElementById('targetPoint').value=state.targetPoint;sounds.click();closeModal('historyModal');save();render();alert('✅ Loaded!')}
+function clearHistory(){showPin(()=>{state.gameHistory=[];sounds.click();save();alert('✅ Cleared!')})}
+function viewStats(){if(Object.keys(state.playerStats).length===0)return alert('No stats yet');let h=`<div class="modal-content"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;padding-bottom:16px;border-bottom:2px solid var(--j-bg)"><h2 style="color:var(--j-primary);font-size:24px;font-weight:800">📈 Statistics</h2><button style="font-size:32px;border:none;background:none;cursor:pointer;color:#9CA3AF" onclick="closeModal('statsModal')">&times;</button></div><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:16px">`;Object.entries(state.playerStats).forEach(([n,s])=>{const avg=s.gamesPlayed>0?(s.totalScore/s.gamesPlayed).toFixed(1):0,wr=s.gamesPlayed>0?((s.wins/s.gamesPlayed)*100).toFixed(0):0,b=s.bestScore===Infinity?0:s.bestScore;h+=`<div style="background:linear-gradient(135deg,rgba(209,250,229,.5),rgba(255,255,255,.95));border-radius:16px;padding:20px;text-align:center;box-shadow:0 4px 16px rgba(6,78,59,.1);border:2px solid rgba(16,185,129,.2)"><div style="font-size:18px;font-weight:700;margin-bottom:16px;color:var(--j-dark)">${n}</div><div style="font-size:36px;font-weight:800;color:var(--j-primary)">${s.gamesPlayed}</div><div style="font-size:13px;color:#6B7280;font-weight:600;margin-top:8px">Games</div><div style="margin-top:16px"><div style="font-size:20px;font-weight:700;color:var(--leaf)">${s.wins}</div><div style="font-size:13px;color:#6B7280;font-weight:600;margin-top:8px">Wins (${wr}%)</div></div><div style="margin-top:16px"><div style="font-size:18px;font-weight:600;color:var(--j-primary)">${avg}</div><div style="font-size:13px;color:#6B7280;font-weight:600;margin-top:8px">Avg</div></div><div style="margin-top:12px;display:flex;justify-content:space-around"><div><div style="font-size:16px;font-weight:600;color:var(--leaf)">${b}</div><div style="font-size:11px;color:#9CA3AF">Best</div></div><div><div style="font-size:16px;font-weight:600;color:var(--danger)">${s.worstScore}</div><div style="font-size:11px;color:#9CA3AF">Worst</div></div></div></div>`});h+=`</div></div>`;document.getElementById('statsModal').innerHTML=h;document.getElementById('statsModal').style.display='block'}
+function showCert(){const w=getWinner();if(!w)return alert('No winner yet!');const d=new Date(),dateStr=d.toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'}),certNum=`UOM-${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}-${String(Math.floor(Math.random()*10000)).padStart(4,'0')}`,gn=state.gameName.toUpperCase(),h=`<div class="modal-content" style="max-width:100%;padding:20px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px"><h2 style="color:var(--j-primary)">🏆 Championship Certificate</h2><button style="font-size:32px;border:none;background:none;cursor:pointer" onclick="closeModal('certModal')">&times;</button></div><div class="cert-container"><div class="cert-border"><div class="cert-header"><div class="cert-logo">🐵 UNIVERSE OF MONKEYS 🐵</div><div class="cert-subtitle">International Gaming Certification Authority</div><div style="font-size:8pt;color:#9CA3AF;margin-top:3mm">Established 1986 • Certification No: ${certNum}</div></div><div class="cert-body"><div class="cert-title">CHAMPIONSHIP CERTIFICATE</div><div class="cert-text">This is to certify that</div><div class="cert-name">${w.name}</div><div class="cert-text">has demonstrated exceptional skill and sportsmanship<br>and is hereby awarded the prestigious title of</div><div class="cert-achievement">🏆 ${gn} CHAMPION 🏆</div><div class="cert-details"><strong>Game:</strong> ${state.gameName} • <strong>Final Score:</strong> ${getTotal(w)} points<br><strong>Target Score:</strong> ${state.targetPoint} points • <strong>Total Rounds:</strong> ${getMaxRounds()}<br><strong>Total Players:</strong> ${state.players.length} competitors</div><div class="cert-text" style="margin-top:12mm;font-size:10pt;font-style:italic">This certificate acknowledges outstanding performance in competitive ${state.gameName.toLowerCase()} gaming<br>and represents the highest honor in the monkey gaming community</div></div><div class="cert-footer"><div class="cert-signature"><div class="cert-sig-line">Chief Gaming Officer</div><div style="font-size:8pt;color:#9CA3AF;margin-top:2mm">Universe of Monkeys</div></div><div class="cert-signature"><div class="cert-sig-line">Director of Championships</div><div style="font-size:8pt;color:#9CA3AF;margin-top:2mm">Gaming Authority</div></div></div><div class="cert-seal"><div class="cert-seal-icon">🏆</div><div class="cert-seal-text">OFFICIAL<br>${gn}<br>CHAMPION<br>${d.getFullYear()}</div></div><div style="position:absolute;bottom:8mm;left:0;right:0;text-align:center;font-size:9pt;color:#9CA3AF">Issued on ${dateStr} • Valid Internationally • www.universemonkeys.org</div></div></div><div style="display:flex;gap:10px;margin-top:20px"><button class="no-hide" style="flex:1;padding:14px;background:var(--j-primary);color:white;border:none;border-radius:14px;font-size:16px;font-weight:700;cursor:pointer" onclick="printCert()">🖨️ Print Certificate</button><button class="no-hide" style="flex:1;padding:14px;background:var(--leaf);color:white;border:none;border-radius:14px;font-size:16px;font-weight:700;cursor:pointer" onclick="downloadCertPDF()">📥 Download PDF</button><button class="no-hide" style="flex:1;padding:14px;background:var(--yellow);color:var(--brown);border:none;border-radius:14px;font-size:16px;font-weight:700;cursor:pointer" onclick="shareCert()">📤 Share</button></div></div>`;document.getElementById('certModal').innerHTML=h;document.getElementById('certModal').style.display='block';sounds.winner()}
+function printCert(){window.print()}
+function downloadCertPDF(){alert('📥 To save as PDF:\n\n1. Click "Print Certificate"\n2. Select "Save as PDF" or "Microsoft Print to PDF"\n3. Choose location and save\n\nYour certificate will be saved as a PDF file!');printCert()}
+function shareCert(){if(navigator.share){navigator.share({title:'Monkey Champion Certificate',text:`🏆 ${getWinner().name} is the Monkey Champion!`,url:window.location.href}).catch(()=>{})}else{alert('📤 To share:\n\n1. Click "Download PDF"\n2. Save the certificate\n3. Share the PDF file via WhatsApp, Email, or Social Media!\n\nOr take a screenshot to share quickly!')}}
 
-// GitHub Sync Functions
-async function initGitHubAuth(){
-const saved=localStorage.getItem(‘githubAuth’);
-if(saved){
-try{
-githubAuth=JSON.parse(saved);
-if(githubAuth.token){
-await verifyGitHubToken();
-}
-}catch(e){}
-}
-renderSyncTab();
-}
-
-async function verifyGitHubToken(){
-try{
-const resp=await fetch(‘https://api.github.com/user’,{
-headers:{‘Authorization’:`token ${githubAuth.token}`}
-});
-if(resp.ok){
-githubAuth.user=await resp.json();
-githubAuth.syncEnabled=true;
-localStorage.setItem(‘githubAuth’,JSON.stringify(githubAuth));
-showSyncStatus(‘synced’,‘✓ Synced’);
-return true;
-}else{
-throw new Error(‘Invalid token’);
-}
-}catch(e){
-githubAuth.token=null;
-githubAuth.user=null;
-githubAuth.syncEnabled=false;
-localStorage.removeItem(‘githubAuth’);
-showSyncStatus(‘error’,‘✗ Auth failed’);
-return false;
-}
-}
-
-function loginGitHub(){
-const token=prompt(‘Enter your GitHub Personal Access Token:\n\n1. Go to github.com/settings/tokens\n2. Generate new token (classic)\n3. Select “repo” scope\n4. Copy and paste token here’);
-if(!token)return;
-githubAuth.token=token.trim();
-verifyGitHubToken().then(valid=>{
-if(valid){
-alert(‘✅ Connected to GitHub!’);
-renderSyncTab();
-syncToGitHub();
-}else{
-alert(‘❌ Invalid token. Please try again.’);
-}
-});
-}
-
-function logoutGitHub(){
-if(!confirm(‘Disconnect from GitHub?’))return;
-githubAuth={token:null,user:null,repo:‘monkeys-scoreboard-data’,syncEnabled:false};
-localStorage.removeItem(‘githubAuth’);
-document.getElementById(‘syncStatus’).style.display=‘none’;
-renderSyncTab();
-alert(‘✅ Disconnected’);
-}
-
-async function syncToGitHub(){
-if(!githubAuth.syncEnabled||!githubAuth.token)return;
-showSyncStatus(‘syncing’,‘⏳ Syncing…’);
-try{
-const content=btoa(unescape(encodeURIComponent(JSON.stringify(state,null,2))));
-const path=‘scoreboard-data.json’;
-let sha=null;
-try{
-const getResp=await fetch(`https://api.github.com/repos/${githubAuth.user.login}/${githubAuth.repo}/contents/${path}`,{
-headers:{‘Authorization’:`token ${githubAuth.token}`}
-});
-if(getResp.ok){
-const data=await getResp.json();
-sha=data.sha;
-}
-}catch(e){}
-const body={
-message:‘Update scoreboard data’,
-content:content,
-…(sha&&{sha})
-};
-const resp=await fetch(`https://api.github.com/repos/${githubAuth.user.login}/${githubAuth.repo}/contents/${path}`,{
-method:‘PUT’,
-headers:{
-‘Authorization’:`token ${githubAuth.token}`,
-‘Content-Type’:‘application/json’
-},
-body:JSON.stringify(body)
-});
-if(resp.ok){
-showSyncStatus(‘synced’,‘✓ Synced’,2000);
-}else if(resp.status===404){
-await createGitHubRepo();
-await syncToGitHub();
-}else{
-throw new Error(‘Sync failed’);
-}
-}catch(e){
-showSyncStatus(‘error’,‘✗ Sync failed’,3000);
-console.error(‘Sync error:’,e);
-}
-}
-
-async function createGitHubRepo(){
-try{
-const resp=await fetch(‘https://api.github.com/user/repos’,{
-method:‘POST’,
-headers:{
-‘Authorization’:`token ${githubAuth.token}`,
-‘Content-Type’:‘application/json’
-},
-body:JSON.stringify({
-name:githubAuth.repo,
-description:‘Monkeys Scoreboard Data’,
-private:true,
-auto_init:true
-})
-});
-if(!resp.ok)throw new Error(‘Failed to create repo’);
-}catch(e){
-console.error(‘Create repo error:’,e);
-}
-}
-
-async function syncFromGitHub(){
-if(!githubAuth.syncEnabled||!githubAuth.token)return;
-showSyncStatus(‘syncing’,‘⏳ Loading…’);
-try{
-const resp=await fetch(`https://api.github.com/repos/${githubAuth.user.login}/${githubAuth.repo}/contents/scoreboard-data.json`,{
-headers:{‘Authorization’:`token ${githubAuth.token}`}
-});
-if(resp.ok){
-const data=await resp.json();
-const content=JSON.parse(decodeURIComponent(escape(atob(data.content))));
-state={…state,…content};
-save();
-render();
-renderGallery();
-showSyncStatus(‘synced’,‘✓ Loaded’,2000);
-alert(‘✅ Data loaded from GitHub!’);
-}else{
-throw new Error(‘No data found’);
-}
-}catch(e){
-showSyncStatus(‘error’,‘✗ Load failed’,3000);
-alert(‘❌ No data found on GitHub’);
-}
-}
-
-function showSyncStatus(type,text,hideAfter=0){
-const status=document.getElementById(‘syncStatus’);
-const icon=document.getElementById(‘syncIcon’);
-const textEl=document.getElementById(‘syncText’);
-status.className=’sync-status ’+type;
-status.style.display=‘flex’;
-icon.textContent=type===‘syncing’?‘⏳’:type===‘synced’?‘✓’:‘✗’;
-textEl.textContent=text;
-if(hideAfter>0){
-setTimeout(()=>status.style.display=‘none’,hideAfter);
-}
-}
-
-function scheduleSync(){
-if(!githubAuth.syncEnabled)return;
-clearTimeout(syncTimeout);
-syncTimeout=setTimeout(()=>syncToGitHub(),2000);
-}
-
-function renderSyncTab(){
-const content=document.getElementById(‘syncTabContent’);
-if(!githubAuth.syncEnabled||!githubAuth.user){
-content.innerHTML=`
-
-<div style="text-align:center;padding:40px">
-<div style="font-size:80px;margin-bottom:20px">☁️</div>
-<h2 style="color:var(--j-primary);margin-bottom:16px">Cloud Sync with GitHub</h2>
-<p style="color:#6B7280;margin-bottom:24px;line-height:1.6">Save your data securely to GitHub and access it from any device. Your data stays private in your GitHub account.</p>
-<button class="github-btn" onclick="loginGitHub()" style="margin:0 auto">
-<svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
-Connect GitHub
-</button>
-<div style="margin-top:32px;padding:20px;background:var(--j-bg);border-radius:14px;text-align:left">
-<h3 style="color:var(--j-dark);margin-bottom:12px;font-size:16px">Setup Instructions:</h3>
-<ol style="color:#6B7280;line-height:1.8;padding-left:20px">
-<li>Go to <a href="https://github.com/settings/tokens" target="_blank" style="color:var(--j-primary)">github.com/settings/tokens</a></li>
-<li>Click "Generate new token (classic)"</li>
-<li>Give it a name like "Monkeys Scoreboard"</li>
-<li>Select the "repo" scope (full control of private repositories)</li>
-<li>Click "Generate token"</li>
-<li>Copy the token and paste it when prompted</li>
-</ol>
-</div>
-</div>
-`;
-}else{
-content.innerHTML=`
-<div style="padding:20px">
-<div style="background:linear-gradient(135deg,var(--j-bg),white);border-radius:16px;padding:24px;margin-bottom:20px;border:2px solid var(--j-primary)">
-<div style="display:flex;align-items:center;gap:16px;margin-bottom:16px">
-<img src="${githubAuth.user.avatar_url}" style="width:60px;height:60px;border-radius:50%;border:3px solid var(--j-primary)">
-<div>
-<div style="font-size:20px;font-weight:700;color:var(--j-dark)">${githubAuth.user.name||githubAuth.user.login}</div>
-<div style="color:#6B7280;font-size:14px">@${githubAuth.user.login}</div>
-</div>
-</div>
-<div style="background:white;padding:12px;border-radius:10px;font-size:13px;color:#6B7280">
-<strong>Repository:</strong> ${githubAuth.user.login}/${githubAuth.repo}
-</div>
-</div>
-<div class="controls" style="margin-bottom:20px">
-<button class="btn-success" onclick="syncToGitHub()" style="flex:1">☁️ Sync Now</button>
-<button style="background:var(--j-primary);color:white;flex:1" onclick="syncFromGitHub()">📥 Load from Cloud</button>
-</div>
-<div class="controls">
-<button class="btn-danger" onclick="logoutGitHub()">🚪 Disconnect</button>
-</div>
-<div style="margin-top:24px;padding:16px;background:var(--j-bg);border-radius:12px
+function showReport(){const w=getWinner(),mr=getMaxRounds(),gn=state.gameName.toUpperCase();let h=`<div class="modal-content"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;padding-bottom:16px;border-bottom:2px solid var(--j-bg)"><h2 style="color:var(--j-primary);font-size:24px;font-weight:800">📋 Report</h2><button style="font-size:32px;border:none;background:none;cursor:pointer;color:#9CA3AF" onclick="closeModal('reportModal')">&times;</button></div>`;if(w){h+=`<div style="background:linear-gradient(135deg,var(--yellow),var(--j-light));border-radius:20px;padding:40px;text-align:center;margin-bottom:30px;box-shadow:0 12px 40px rgba(5,150,105,.4);border:3px solid var(--j-primary)"><div style="font-size:100px;animation:bounce 2s infinite">👑</div><div style="font-size:120px">🐵</div><div style="font-size:42px;font-weight:800;color:var(--j-dark);text-shadow:2px 2px 4px rgba(0,0,0,.2);margin:20px 0">${gn} KING!</div><div style="font-size:36px;font-weight:700;color:var(--brown)">${w.name}</div><div style="font-size:24px;color:var(--brown);margin-top:12px;font-weight:700">Score: ${getTotal(w)}</div></div><button style="width:100%;padding:14px;background:gold;color:var(--brown);border:none;border-radius:14px;font-size:16px;font-weight:700;cursor:pointer;margin-bottom:20px" onclick="showCert()">🏆 Get Certificate</button>`}h+=`<div style="margin-bottom:24px"><h3 style="color:var(--j-primary);font-size:18px;margin-bottom:12px">Game Info</h3><p><strong>Game:</strong> ${state.gameName}</p><p><strong>Target:</strong> ${state.targetPoint}</p><p><strong>Players:</strong> ${state.players.length}</p><p><strong>Rounds:</strong> ${mr}</p></div>`;if(mr>0){h+=`<div><h3 style="color:var(--j-primary);font-size:18px;margin-bottom:12px">Scores</h3><table style="width:100%;border-collapse:collapse;margin:16px 0"><thead><tr><th style="padding:12px;text-align:left;border-bottom:1px solid var(--j-bg);background:var(--j-bg);font-weight:700;color:var(--j-dark)">Player</th>`;for(let i=0;i<mr;i++)h+=`<th style="padding:12px;text-align:left;border-bottom:1px solid var(--j-bg);background:var(--j-bg);font-weight:700;color:var(--j-dark)">R${i+1}</th>`;h+=`<th style="padding:12px;text-align:left;border-bottom:1px solid var(--j-bg);background:var(--j-bg);font-weight:700;color:var(--j-dark)">Total</th><th style="padding:12px;text-align:left;border-bottom:1px solid var(--j-bg);background:var(--j-bg);font-weight:700;color:var(--j-dark)">Status</th></tr></thead><tbody>`;state.players.forEach(p=>{const t=getTotal(p),io=t>=state.targetPoint,iw=w&&p.id===w.id;h+=`<tr style="${iw?'background:linear-gradient(to right,var(--yellow),var(--j-bg))!important;font-weight:700':''}"><td style="padding:12px;border-bottom:1px solid var(--j-bg)"><strong>${p.name}${iw?' 👑':''}</strong></td>`;for(let i=0;i<mr;i++)h+=`<td style="padding:12px;border-bottom:1px solid var(--j-bg)">${p.scores[i]!==undefined?p.scores[i]:'-'}</td>`;h+=`<td style="padding:12px;border-bottom:1px solid var(--j-bg)"><strong>${t}</strong></td><td style="padding:12px;border-bottom:1px solid var(--j-bg)">${io?'❌':'✓'}</td></tr>`});h+=`</tbody></table></div>`}h+=`<button style="width:100%;padding:14px;background:var(--j-primary);color:white;border:none;border-radius:14px;font-size:16px;font-weight:700;cursor:pointer;margin-top:20px" onclick="copyReport()">📋 Copy Report</button></div>`;document.getElementById('reportModal').innerHTML=h;document.getElementById('reportModal').style.display='block'}
+function copyReport(){const w=getWinner(),mr=getMaxRounds(),gn=state.gameName.toUpperCase();let t='🐵 MONKEYS SCORE BOARD\n'+'='.repeat(50)+'\n\n';if(w){t+=`👑 ${gn} KING: ${w.name}\nScore: ${getTotal(w)}\n\n`}t+=`GAME: ${state.gameName}\nTARGET: ${state.targetPoint}\nPLAYERS: ${state.players.length}\nROUNDS: ${mr}\n\n`;if(mr>0){t+=`SCORES:\n${'-'.repeat(50)}\n`;t+='Player'.padEnd(15);for(let i=0;i<mr;i++)t+=`R${i+1}`.padEnd(8);t+='Total\n'+'-'.repeat(50)+'\n';state.players.forEach(p=>{const to=getTotal(p);t+=p.name.padEnd(15);for(let i=0;i<mr;i++)t+=(p.scores[i]!==undefined?p.scores[i]:'-').toString().padEnd(8);t+=to+'\n'})}t+='\n'+'='.repeat(50)+'\n'+`Generated: ${new Date().toLocaleString()}\n`;navigator.clipboard.writeText(t).then(()=>alert('✅ Copied!')).catch(()=>alert('❌ Failed!'))}
+function closeModal(i){document.getElementById(i).style.display='none'}
+function selectPhoto(id){currentPhotoPlayer=id;document.getElementById('playerPhotoInput').click()}
+function resizeImg(f,cb){const r=new FileReader();r.onload=e=>{const i=new Image();i.onload=()=>{const c=document.createElement('canvas'),w=200,h=200;c.width=w;c.height=h;const ctx=c.getContext('2d'),s=Math.min(i.width,i.height),x=(i.width-s)/2,y=(i.height-s)/2;ctx.drawImage(i,x,y,s,s,0,0,w,h);cb(c.toDataURL('image/jpeg',.7))};i.src=e.target.result};r.readAsDataURL(f)}
+function addGallery(){const f=document.getElementById('galleryInput').files[0];if(!f)return;if(state.gallery.length>=20)return alert('Max 20 photos!');resizeImg(f,d=>{state.gallery.push({id:Date.now(),data:d});save();renderGallery()})}
+function deleteGallery(id){if(!confirm('Delete photo?'))return;state.gallery=state.gallery.filter(g=>g.id!==id);save();renderGallery()}
+function clearGallery(){showPin(()=>{state.gallery=[];save();renderGallery();alert('✅ Cleared!')})}
+function renderGallery(){const g=document.getElementById('galleryGrid');if(state.gallery.length===0){g.innerHTML='<p style="text-align:center;color:#9CA3AF;grid-column:1/-1">No photos yet</p>';return}g.innerHTML=state.gallery.map(p=>`<div class="gallery-item"><img src="${p.data}" alt="Event"><button class="delete" onclick="deleteGallery(${p.id})">×</button></div>`).join('')}
+function render(){const s=getSorted(),l=document.getElementById('playersList');l.innerHTML=s.map(p=>{const t=getTotal(p),io=t>=state.targetPoint,r=getMaxRounds()+1,id=state.roundDealers[r]===p.name;return`<div class="player-card" data-player-id="${p.id}" style="border-left-color:${p.color};background-color:${p.color}"><div class="player-header"><div style="display:flex;align-items:center"><div>${p.photo?`<img src="${p.photo}" class="player-photo" onclick="selectPhoto(${p.id})">`:`<div style="width:50px;height:50px;border-radius:50%;background:white;display:flex;align-items:center;justify-content:center;font-size:24px;border:3px solid var(--j-primary);margin-right:10px;cursor:pointer" onclick="selectPhoto(${p.id})">📷</div>`}</div><div><div style="display:flex;align-items:center;gap:10px"><span class="player-name">${p.name}</span>${id?'<span class="dealer-badge">🃏 DEALER</span>':''}</div><div style="font-size:13px;color:#6B7280;margin-top:6px">Rounds: ${p.scores.length}</div></div></div><div style="text-align:right"><div class="player-score">${t}</div><span class="status-badge ${io?'status-out':'status-in'}">${io?'❌ OUT':'✓ IN'}</span></div></div><div class="controls" style="margin-bottom:12px"><input type="number" id="score-${p.id}" placeholder="Score" style="flex:1" data-player-id="${p.id}"><button class="btn-success" data-action="add" data-id="${p.id}">➕</button><button class="btn-warning" data-action="remove" data-id="${p.id}" ${p.scores.length===0?'disabled':''}>🗑️</button><button class="${id?'btn-warning':''}" data-action="dealer" data-id="${p.id}" style="${id?'':'background:var(--j-bg);color:var(--j-dark)'}">🃏</button></div>${p.scores.length>0?`<div style="display:flex;gap:6px;flex-wrap:wrap">${p.scores.map((sc,i)=>`<span style="background:white;padding:5px 12px;border-radius:12px;font-size:13px;font-weight:600;border:1px solid var(--j-primary)">R${i+1}: ${sc}</span>`).join('')}</div>`:''}</div>`}).join('');l.querySelectorAll('button[data-action]').forEach(b=>b.addEventListener('click',function(){const a=this.dataset.action,id=parseInt(this.dataset.id);if(a==='add')addScore(id);else if(a==='remove')removeScore(id);else if(a==='dealer')setDealer(id)}));l.querySelectorAll('input[data-player-id]').forEach(i=>i.addEventListener('keypress',e=>{if(e.key==='Enter')addScore(parseInt(i.dataset.playerId))}))}
+document.addEventListener('DOMContentLoaded',()=>{load();document.getElementById('gameName').value=state.gameName;document.getElementById('targetPoint').value=state.targetPoint;document.getElementById('sortBy').value=state.sortBy;document.getElementById('soundToggle').textContent=sounds.enabled?'🔊':'🔇';render();renderGallery();document.getElementById('pinInput').addEventListener('keypress',e=>{if(e.key==='Enter')verifyPin()});document.querySelectorAll('.tab-btn').forEach(b=>b.addEventListener('click',function(){document.querySelectorAll('.tab-btn').forEach(bt=>bt.classList.remove('active'));document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));this.classList.add('active');document.getElementById(this.dataset.tab+'-tab').classList.add('active');sounds.click()}));document.getElementById('soundToggle').addEventListener('click',function(){sounds.enabled=!sounds.enabled;this.textContent=sounds.enabled?'🔊':'🔇';if(sounds.enabled)sounds.click();save()});document.getElementById('undoBtn').addEventListener('click',undo);document.getElementById('resetPointsBtn').addEventListener('click',()=>showPin(()=>{state.players.forEach(p=>{p.scores=[];p.dealerHistory=[]});state.roundDealers=[];state.undoStack=[];sounds.click();save();render();alert('✅ Reset!')}));document.getElementById('resetPlayersBtn').addEventListener('click',()=>showPin(()=>{state.players=[];state.roundDealers=[];state.undoStack=[];sounds.click();save();render();alert('✅ Deleted!')}));document.getElementById('addPlayerBtn').addEventListener('click',addPlayer);document.getElementById('newPlayerName').addEventListener('keypress',e=>{if(e.key==='Enter')addPlayer()});document.getElementById('targetPoint').addEventListener('change',function(){state.targetPoint=parseInt(this.value)||330;save();render()});document.getElementById('sortBy').addEventListener('change',function(){state.sortBy=this.value;save();render()});document.getElementById('gameName').addEventListener('input',function(){state.gameName=this.value;save()});document.getElementById('reportBtn').addEventListener('click',showReport);document.getElementById('saveGameBtn').addEventListener('click',saveGame);document.getElementById('loadGamesBtn').addEventListener('click',loadGames);document.getElementById('clearHistoryBtn').addEventListener('click',clearHistory);document.getElementById('viewStatsBtn').addEventListener('click',viewStats);document.getElementById('refreshStatsBtn').addEventListener('click',()=>{updateStats();alert('✅ Refreshed!')});document.getElementById('galleryInput').addEventListener('change',addGallery);document.getElementById('clearGalleryBtn').addEventListener('click',clearGallery);document.getElementById('playerPhotoInput').addEventListener('change',function(){const f=this.files[0];if(!f||!currentPhotoPlayer)return;resizeImg(f,d=>{const p=state.players.find(pl=>pl.id===currentPhotoPlayer);if(p){p.photo=d;save();render()}currentPhotoPlayer=null})});window.onclick=e=>{if(e.target.classList.contains('modal'))e.target.style.display='none'}});
+</script>
+</body>
+</html>
